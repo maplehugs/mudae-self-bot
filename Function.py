@@ -9,6 +9,7 @@ botID = '432610292342587392'
 auth = {'authorization' : Vars.token}
 bot = discum.Client(token = Vars.token, log=False)
 url = (f'https://discord.com/api/v8/channels/{Vars.channelId}/messages')
+power_threshold = Vars.power_threshold
 
 def send_daily(bot, botID):
     try:
@@ -112,7 +113,7 @@ def simpleRoll():
     if not chosen_card:
         best_card = None
         for card in rolled_cards:
-            if card["power"] >= 500:
+            if card["power"] >= power_threshold:
                 if not best_card or card["power"] > best_card["power"]:
                     best_card = card
         chosen_card = best_card
