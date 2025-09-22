@@ -19,13 +19,19 @@ This bot still uses the Discord API to interact with Mudae and is intended to ru
 ## Features
 
 * **Auto roll** every hour with your preferred command
-* **Auto claim** cards from your desired series
-* **Auto react** to preferred kakera
-* **Sniper** other users’ rolls based on a desired list or minimum power (default >500)
+* **Auto claim** cards from your desired characters or series
+* **Auto react** to preferred kakera (fully handled by the sniper)
+* **Sniper** other users’ rolls:
+
+  * Claim cards from desired characters (`desiredCharacters`)
+  * Claim cards from desired series (`desiredSeries`)
+  * Claim cards that meet or exceed a power threshold (`minPower`)
+  * Fully configurable with booleans to toggle character/series/power sniping
 * **Pull list** to track and prioritize character pulls
 * **Repeat** all actions at the minute you prefer
-* **Daily Kakera** does the /dk everytime it rolls, so it will get the daily Kakera for sure
+* **Daily Kakera** triggers `/dk` automatically during rolls
 * **BONUS** - Uses slash commands for native boosts (10% extra Kakera)
+* **Silent rolling** – rolling function no longer prints logs; all tracking is centralized in the sniper
 
 ## Files
 
@@ -39,7 +45,7 @@ This bot still uses the Discord API to interact with Mudae and is intended to ru
 ## Requirements
 
 * **Python 3.13.3**
-* **Discum** – For Discord message management. Install the latest version directly from GitHub:
+* **Discum** – For Discord message management ([GitHub](https://github.com/Merubokkusu/Discord-S.C.U.M)). Install the latest version directly from GitHub:
 
 ```bash
 python -m pip install --user --upgrade git+https://github.com/Merubokkusu/Discord-S.C.U.M.git#egg=discum
@@ -50,10 +56,6 @@ python -m pip install --user --upgrade git+https://github.com/Merubokkusu/Discor
 ```bash
 pip install schedule
 ```
-
-For more information on Discum, check the [official GitHub repository](https://github.com/Merubokkusu/Discord-S.C.U.M).
-
----
 
 ## How to Set Up / Use
 
@@ -76,10 +78,14 @@ Set your bot preferences and account info:
 * `rollCommand` – Command for rolling (mx, ma, mg, wx, wg, wa, hx, ha, hg)
 * `desiredKakeras` – Case-sensitive array of preferred kakera
 * `desiredSeries` – Case-sensitive array of preferred series
+* `desiredCharacters` – Array of characters to auto-claim with priority
 * `pokeRoll` – Enable Pokeslot rolling (True/False)
-* `repeatMinute` – Exact minute to perform rolls (00–59 eg. 11:30 -> 12:30 -> 1:30 -> ...)
-* `desiredCharacters` – New: Array of characters to auto-claim with priority
-* `minPower` – New: Minimum power for sniper pull (default 500)
+* `repeatMinute` – Exact minute to perform rolls (00–59 eg. 11:30 → 12:30 → 1:30 → ...)
+* `minPower` – Minimum power for sniper pull (default 500)
+* `daily_kakera` - Toggle daily kakera command to be pulled every hour with simpleRoll()
+* `catch_from_characters` – Toggle claiming by desired characters (True/False)
+* `catch_from_series` – Toggle claiming by desired series (True/False)
+* `catch_from_power` – Toggle claiming by power threshold (True/False)
 
 **Example `Vars.py`:**
 
@@ -87,13 +93,22 @@ Set your bot preferences and account info:
 token = 'YOUR_DISCORD_TOKEN'
 channelId = '123456789012345678'
 serverId = '987654321098765432'
-rollCommand= 'wa'
-desiredKakeras= ['kakeraP','kakeraY','kakeraO','kakeraR','kakeraW','kakeraL']
+
+rollCommand = 'wx'
+desiredKakeras = ['kakeraP','kakeraY','kakeraO','kakeraR','kakeraW','kakeraL']
 desiredSeries = ['One Piece','Dragon Ball Z','Death Note']
 desiredCharacters = ['Luffy','Goku','Light Yagami']
+
 pokeRoll = True
 repeatMinute = '25'
 minPower = 500
+
+daily_kakera = True
+
+# Sniper options (1. Characters > 2. Series > 3. Power)
+catch_from_characters = True
+catch_from_series = True
+catch_from_power = True
 ```
 
 ### Execution
@@ -116,9 +131,30 @@ Run `Bot.py` to start the bot. It will log all rolls, claims, and sniper actions
   * `$togglekakstats`
   * `$togglekakerarolls`
 
-
 ## Advanced Features ("Fork" Update)
 
-* **Sniper**: Automatically claim cards from other users if they match your `desiredCharacters` or exceed `minPower`
-* **Pull List**: Tracks pulls and automatically claims the best available
-* **All original features** from GDiazFentanes’ bot
+* **Sniper System** – Automatically claims cards from other users’ rolls based on:
+
+  * Desired characters (`desiredCharacters`)
+  * Desired series (`desiredSeries`)
+  * Power threshold (`minPower`)
+  * Fully configurable with booleans: `catch_from_characters`, `catch_from_series`, `catch_from_power`
+
+* **Silent Roller** – Rolls cards and triggers daily Kakera without console output; all claiming and reactions handled by the sniper.
+
+* **Series & Character Cleaning** – Removes trailing emojis and extra spaces to ensure reliable matching with your desired lists.
+
+* **Pull List Management** – Tracks and prioritizes character pulls automatically.
+
+* **All original features** from GDiazFentanes’ bot are preserved:
+  
+  * Auto roll every hour
+  * Auto claim based on desired series
+  * Auto react to preferred Kakera
+  * Pokeslot rolling (`pokeRoll`)
+  * Repeat actions at a chosen minute
+  * Slash command support
+  
+* **Optional Multi-Bot Support:**
+
+  * You can run multiple accounts simultaneously to maximize auto-claims, sniper pulls, and Kakera collection.
