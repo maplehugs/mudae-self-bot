@@ -38,16 +38,22 @@ This bot still uses the Discord API to interact with Mudae and is intended to ru
 
 ## Requirements
 
-* Python 3.13.3
-* [Discum](https://pypi.org/project/discum/) – For Discord message management
-* [Schedule](https://pypi.org/project/schedule/) – For precise timed execution
-
-Install dependencies with:
+* **Python 3.13.3**
+* **Discum** – For Discord message management. Install the latest version directly from GitHub:
 
 ```bash
-pip install discum
+python -m pip install --user --upgrade git+https://github.com/Merubokkusu/Discord-S.C.U.M.git#egg=discum
+```
+
+* **Schedule** – For precise timed execution:
+
+```bash
 pip install schedule
 ```
+
+For more information on Discum, check the [official GitHub repository](https://github.com/Merubokkusu/Discord-S.C.U.M).
+
+---
 
 ## How to Set Up / Use
 
