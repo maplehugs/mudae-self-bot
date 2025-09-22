@@ -21,7 +21,7 @@ This bot still uses the Discord API to interact with Mudae and is intended to ru
 * **Auto roll** every hour with your preferred command
 * **Auto claim** cards from your desired series
 * **Auto react** to preferred kakera
-* **Sniper** other users’ rolls based on a desired list or minimum power (default >150)
+* **Sniper** other users’ rolls based on a desired list or minimum power (default >500)
 * **Pull list** to track and prioritize character pulls
 * **Repeat** all actions at the minute you prefer
 * **Daily Kakera** does the /dk everytime it rolls, so it will get the daily Kakera for sure
