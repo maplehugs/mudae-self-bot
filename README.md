@@ -24,7 +24,7 @@ This bot still uses the Discord API to interact with Mudae and is intended to ru
 * **Sniper** other users’ rolls based on a desired list or minimum power (default >150)
 * **Pull list** to track and prioritize character pulls
 * **Repeat** all actions at the minute you prefer
-* **Daily Kakera** does the /daily everytime it rolls, so it will get the daily Kakera for sure
+* **Daily Kakera** does the /dk everytime it rolls, so it will get the daily Kakera for sure
 * **BONUS** - Uses slash commands for native boosts (10% extra Kakera)
 
 ## Files

@@ -12,11 +12,12 @@ url = (f'https://discord.com/api/v8/channels/{Vars.channelId}/messages')
 
 def send_daily(bot, botID):
     try:
-        daily_command = SlashCommander(bot.getSlashCommands(botID).json()).get(['daily'])
-        bot.sendCommand(daily_command)
-        print("[+] /daily command sent successfully!")
+        daily_command = SlashCommander(bot.getSlashCommands(botID).json()).get(['dk'])
+        bot.triggerSlashCommand(botID, Vars.channelId, Vars.serverId, data=daily_command)
+        print("[+] /dk command sent successfully!")
     except Exception as e:
-        print(f"[!] Failed to send /daily command: {e}")
+        print(f"[!] Failed to send /dk command: {e}")
+
 
 def simpleRoll():
     print("Trying to do Daily Kakera")
