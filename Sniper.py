@@ -60,6 +60,8 @@ def react_to_card(message):
             print(f"{RED}⚠️ {timestamp} - Sniping {card_name} from {card_series} (Power {card_power}) ⚠️{RESET}")
 
             try:
+
+                time.sleep(0.1)
                 requests.put(
                     f'https://discord.com/api/v8/channels/{channelID}/messages/{message["id"]}/reactions/{emoji}/%40me',
                     headers=auth
