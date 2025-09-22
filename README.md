@@ -48,7 +48,7 @@ This bot still uses the Discord API to interact with Mudae and is intended to ru
 * **Discum** – For Discord message management ([GitHub](https://github.com/Merubokkusu/Discord-S.C.U.M)). Install the latest version directly from GitHub:
 
 ```bash
-python -m pip install --user --upgrade git+https://github.com/Merubokkusu/Discord-S.C.U.M.git#egg=discum
+pip install discum
 ```
 
 * **Schedule** – For precise timed execution:
