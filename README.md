@@ -57,6 +57,11 @@ pip install discum
 pip install schedule
 ```
 
+> [!IMPORTANT]
+> Before using the bot, you must run the `$help` command in your server once.
+> This unlocks Mudae’s **slash commands**, which are required for the bot to function correctly.
+
+
 ## How to Set Up / Use
 
 ### Packages
@@ -120,16 +125,20 @@ Run `Bot.py` to start the bot. It will log all rolls, claims, and sniper actions
 
 ### Possible Errors
 
+> [!WARNING]
+> Most issues come from **case sensitivity** or missing server settings. Double-check your `Vars.py` configuration and Mudae toggles before troubleshooting further.
+
 * Mudae has no permission to read/write in the chosen channel
 * Discord token may have changed
 * Series/character names are case-sensitive
 * Your account must have DMs with Mudae enabled
-* If the server does not display Kakera amounts or character info (name/series), the bot may fail to read messages or catch any rolls/cards properly.
-  **At minimum, the following Mudae settings/commands must be enabled:**
 
-  * `$togglestatistics`
-  * `$togglekakstats`
-  * `$togglekakerarolls`
+> [!IMPORTANT]
+> The following **must** be enabled in Mudae for the bot to work properly:
+>
+> * `$togglestatistics`
+> * `$togglekakstats`
+> * `$togglekakerarolls`
 
 ## Advanced Features ("Fork" Update)
 
