@@ -121,7 +121,10 @@ catch_from_power = True
 Run `Bot.py` to start the bot. It will log all rolls, claims, and sniper actions.
 
 * Red heart → already claimed cards
-* White heart → not claimed yet
+* Broken heart → not claimed yet
+
+![img.png](img.png)
+
 
 ### Possible Errors
 
