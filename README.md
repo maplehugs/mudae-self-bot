@@ -30,9 +30,9 @@ With it, the bot can:
 
 ## Screenshots
 
-| Live feed | History | Config |
-| --- | --- | --- |
-| ![Live feed](screenshots/live.png) | ![History](screenshots/history.png) | ![Config](screenshots/config.png) |
+![Live feed](screenshots/live.png)
+
+![Config](screenshots/config.png)
 
 ## Files
 
