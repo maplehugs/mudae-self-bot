@@ -27,6 +27,7 @@ DEFAULTS = {
     'autoRoll': True,
     'repeatMinute': 25,
     'pokeRoll': True,
+    'autoBadges': False,  # spend kakera on the cheapest affordable badge level after each roll
     'dailyKakera': True,
     'catchFromCharacters': True,
     'catchFromSeries': True,
@@ -75,6 +76,12 @@ db_lock = threading.Lock()
 db.execute('''CREATE TABLE IF NOT EXISTS cards (
     id INTEGER PRIMARY KEY, ts REAL, msg_id TEXT, name TEXT, series TEXT,
     power INTEGER, image TEXT, owned INTEGER, action TEXT DEFAULT 'seen', kakera TEXT)''')
+db.execute('CREATE TABLE IF NOT EXISTS stock (ts REAL, kakera INTEGER)')
+
+
+def record_stock(n):
+    if n is not None:
+        q('INSERT INTO stock VALUES (?, ?)', time.time(), n)
 
 
 def q(sql, *args):
@@ -134,6 +141,33 @@ def wanted(card, c=cfg):
     if c['catchFromPower'] and card['power'] >= c['minPower']:
         return f"poder ≥ {c['minPower']}"
     return None
+
+
+def num(pattern, text):
+    m = re.search(pattern, text)
+    return int(m.group(1).replace(',', '')) if m else None
+
+
+def parse_tu(text):
+    """What $tu says we can do now (English Mudae)."""
+    return {
+        'rolls': num(r'You have \*\*(\d+)\*\* rolls? left', text),
+        'dk': '$dk' in text and 'Next $dk' not in text,
+        'daily': '$daily is available' in text,
+        'stock': num(r'Stock: \*\*([\d,]+)\*\*<:kakera', text),
+    }
+
+
+def parse_badges(text):
+    """{badge: (level, next level cost)} for the badges $k lets us upgrade."""
+    return {b.lower(): (int(lvl), int(cost.replace(',', '')))
+            for b, lvl, cost in re.findall(r'\*\*(\w+) (\d)\*\* · Next level: \*\*([\d,]+)\*\*', text)}
+
+
+def pick_badge(badges, stock):
+    """Cheapest affordable level first: levels Bronze/Silver/Gold evenly, which also unlocks Sapphire/Ruby/Emerald."""
+    ok = [(cost, b) for b, (_, cost) in badges.items() if cost <= stock]
+    return min(ok)[1] if ok else None
 
 
 # ---------- discord ----------
@@ -288,17 +322,62 @@ def last_reply():
             return m
 
 
+def ask(text):
+    """Send a $command and return Mudae's first message after it (or None)."""
+    sent = int(client.sendMessage(cfg['channelId'], text).json()['id'])
+    time.sleep(random.uniform(3, 5))
+    msgs = client.getMessages(cfg['channelId'], 10).json()
+    return next((m for m in reversed(msgs) if m['author']['id'] == MUDAE_ID and int(m['id']) > sent), None)
+
+
+def text_of(m):
+    return '\n'.join([m['content']] + [e.get('description', '') for e in m.get('embeds', [])]) if m else ''
+
+
+def status():
+    tu = parse_tu(text_of(ask('$tu')))
+    record_stock(tu['stock'])
+    return tu
+
+
+def upgrade_badges():
+    for _ in range(10):  # ponytail: cap, one level per loop
+        desc = text_of(ask('$k'))
+        stock = num(r'You have \*\*([\d,]+)\*\*', desc)
+        record_stock(stock)
+        badge = pick_badge(parse_badges(desc), stock or 0)
+        if not badge:
+            return
+        time.sleep(random.uniform(2, 5))
+        reply = text_of(ask('$' + badge))
+        if 'y/n' in reply.lower():
+            reply = text_of(ask('y'))
+        log(f"🏅 Badge {badge}: {reply[:100]}")
+        alert(f"🏅 Subí el badge **{badge}** con kakera")
+        time.sleep(random.uniform(2, 5))
+
+
 def roll():
     if not client:
         return log('▶️ Inicia el bot antes de rolear')
     ch, guild = cfg['channelId'], cfg['serverId']
     cmds = SlashCommander(client.getSlashCommands(MUDAE_ID).json())
-    if cfg['dailyKakera']:
-        client.triggerSlashCommand(MUDAE_ID, ch, guild, data=cmds.get(['dk']))
+    tu = status()
+    if cfg['dailyKakera'] and tu['dk']:
         time.sleep(random.uniform(2, 4))
-    log(f"🎲 Roleando /{cfg['rollCommand']}")
+        client.triggerSlashCommand(MUDAE_ID, ch, guild, data=cmds.get(['dk']))
+        log('💎 /dk')
+    if tu['rolls'] == 0 and tu['daily']:
+        time.sleep(random.uniform(2, 4))
+        log('🔄 $daily + $rolls (reset de rolls)')
+        ask('$daily')  # stores a rolls reset, $rolls spends it
+        time.sleep(random.uniform(1, 3))
+        ask('$rolls')
+        tu = status()
+    rolls = 30 if tu['rolls'] is None else tu['rolls']  # ponytail: $tu unreadable (other language) → roll until Mudae says stop
+    log(f"🎲 Roleando /{cfg['rollCommand']} x{rolls}" if rolls else '😴 Sin rolls esta hora')
     cmd = cmds.get([cfg['rollCommand']])
-    for _ in range(30):  # ponytail: hard cap in case "out of rolls" is never detected
+    for _ in range(rolls):
         client.triggerSlashCommand(MUDAE_ID, ch, guild, data=cmd)
         time.sleep(random.uniform(2.5, 6))  # human-ish pace between rolls
         reply = last_reply()
@@ -308,6 +387,9 @@ def roll():
     if cfg['pokeRoll']:
         time.sleep(random.uniform(3, 10))
         client.sendMessage(ch, '$p')
+    if cfg['autoBadges']:
+        time.sleep(random.uniform(20, 60))  # let kakera from this roll land first
+        upgrade_badges()
 
 
 def run_bg(fn):
@@ -365,6 +447,7 @@ def state():
         'user': me.get('username'),
         'nextRoll': next_roll().strftime('%H:%M') if cfg['autoRoll'] else None,
         'stats': {k: v or 0 for k, v in stats.items()},
+        'stock': (q('SELECT kakera FROM stock ORDER BY ts DESC LIMIT 1') or [{'kakera': None}])[0]['kakera'],
         'feed': q('SELECT * FROM cards ORDER BY id DESC LIMIT 60'),
         'history': q("SELECT * FROM cards WHERE action != 'seen' OR kakera IS NOT NULL ORDER BY id DESC LIMIT 300"),
         'log': list(logs)[-150:],

@@ -23,6 +23,26 @@ assert mudae.wanted({**card, 'name': 'Mai', 'series': 'NEKOPARA'}, c) == 'serie'
 assert mudae.wanted({**card, 'name': 'Mai'}, c) is None
 assert mudae.wanted({**card, 'name': 'Mai', 'power': 2000}, c).startswith('poder')
 assert mudae.wanted(card, {**c, 'catchFromCharacters': False}) is None
+tu = """**onlymaple**, you __can__ claim right now! The next claim reset is in **1h 44** min.
+You have **0** rolls left. Next rolls reset in **44** min.
+$daily is available!
+Stock: **1,342**<:kakera:469835869059153940>
+
+Next $dk in **19h 52** min."""
+assert mudae.parse_tu(tu) == {'rolls': 0, 'dk': False, 'daily': True, 'stock': 1342}, mudae.parse_tu(tu)
+assert mudae.parse_tu('You have **10** rolls left.\n$dk is ready!') == {'rolls': 10, 'dk': True, 'daily': False, 'stock': None}
+k = """You have **342**<:kakera:1>!
+ **Bronze 0** · Next level: **1,000**<:kakera:1> +1 wishlist slot
+ **Silver 0** · Next level: **2,000**<:kakera:1> +25% wishlist spawn
+ **Gold 1** · Next level: **6,000**<:kakera:1> -10% kakera power usage ($ku)
+??? · Prerequisites: Bronze I + Silver I + Gold I or 2 badges IV
+ **Diamond 0** · Next level: **12,000**<:kakera:1> +1 $ouroharvest ($oh) per day"""
+b = mudae.parse_badges(k)
+assert b == {'bronze': (0, 1000), 'silver': (0, 2000), 'gold': (1, 6000), 'diamond': (0, 12000)}, b
+assert mudae.pick_badge(b, 342) is None
+assert mudae.pick_badge(b, 2500) == 'bronze'
+assert mudae.pick_badge({**b, 'bronze': (1, 2000)}, 2000) in ('bronze', 'silver')
+
 import datetime
 J = datetime.timedelta(minutes=mudae.ROLL_JITTER_MIN)
 for minute in (25, 55):

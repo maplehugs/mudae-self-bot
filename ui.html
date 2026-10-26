@@ -88,6 +88,7 @@
     <div class="stat"><b id="s-claims">0</b><small>Intentos de claim</small></div>
     <div class="stat"><b id="s-married">0</b><small>Casados 💍</small></div>
     <div class="stat"><b id="s-kakera">0</b><small>Kakeras 💎</small></div>
+    <div class="stat"><b id="s-stock">–</b><small>Kakera en stock</small></div>
   </section>
 
   <nav role="tablist">
@@ -149,8 +150,9 @@
           <div class="field"><label for="repeatMinute">Minuto de cada hora</label><input id="repeatMinute" name="repeatMinute" type="number" min="0" max="59"></div>
         </div>
         <label class="check"><input type="checkbox" name="autoRoll"> Rolear automáticamente cada hora</label>
-        <label class="check"><input type="checkbox" name="dailyKakera"> Lanzar /dk antes de rolear</label>
+        <label class="check"><input type="checkbox" name="dailyKakera"> Lanzar /dk (y $daily) cuando estén listos</label>
         <label class="check"><input type="checkbox" name="pokeRoll"> Lanzar $p (Pokeslot)</label>
+        <label class="check"><input type="checkbox" name="autoBadges"> Subir badges con el kakera (el más barato primero)</label>
       </div>
 
       <div class="panel">
@@ -229,6 +231,7 @@ function render() {
   $('start').hidden = s.running; $('stop').hidden = !s.running;
   $('next').hidden = !s.nextRoll; $('next').textContent = `Próximo roll ${s.nextRoll}`;
   for (const k of ['seen', 'claims', 'married', 'kakera']) $('s-' + k).textContent = s.stats[k];
+  $('s-stock').textContent = s.stock ?? '–';
 
   put('feed', s.feed.map(c => cardHTML(c)).join('') || '<p class="empty">Aún no hay cartas. Inicia el bot y espera un roll en el canal.</p>');
   const atBottom = $('log').scrollHeight - $('log').scrollTop - $('log').clientHeight < 30;

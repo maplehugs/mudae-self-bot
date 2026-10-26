@@ -23,7 +23,10 @@ With it, the bot can:
 * **Live feed** of every card Mudae shows in your channel, **with the card image**, power and claimed status
 * **History** of claim attempts, marriages and kakera grabs (stored in `mudae.db`), searchable and filterable
 * **Alerts** via **Discord webhook** and/or **Telegram bot** (both free) on claim attempt, marriage, kakera and disconnect
-* **Auto roll** every hour at the minute you choose (+ `/dk` and `$p` optional)
+* **Auto roll** every hour in a random window after the minute you choose. It checks `$tu` first, rolls exactly what you have left, and only runs `/dk` / `$daily` + `$rolls` when they're ready (+ `$p` optional)
+* **Auto badges** (optional): spends kakera on the cheapest affordable badge level (Bronze/Silver/Gold first, which unlocks Sapphire/Ruby/Emerald)
+* **Kakera stock** tracked over time in `mudae.db`
+* **Randomized timing** on rolls, claims and kakera clicks so it doesn't act like a metronome
 * **Sniper** for any roll in the channel: by desired character > series > power threshold (case-insensitive)
 * **Auto kakera** for the kakera types you pick
 * Uses slash commands for native boosts (10% extra Kakera)
