@@ -5,16 +5,17 @@
 
 ## Introduction
 
-This project is a **"fork"/update** of [GDiazFentanes’ original Mudae bot](https://github.com/GuilleDiazFentanes/AutoClaim-AutoRoll-AutoReact-MudaeBot-2025) which for some reason crashed on my setup.
-I have updated some functions in the original `Function.py`, added a **Sniper** for other people’s rolls, and implemented a **pull list** feature.
+This project started as a **fork** of [GDiazFentanes’ original Mudae bot](https://github.com/GuilleDiazFentanes/AutoClaim-AutoRoll-AutoReact-MudaeBot-2025), which crashed on my setup.
+It has since been rewritten: everything now runs from a small **web panel** (no more editing `Vars.py`), with a live card feed, history and alerts.
 
-With these updates, the bot can:
+With it, the bot can:
 
-* Automatically claim Mudae characters (waifus, husbandos, or kakera)
-* Snipe cards from other users’ rolls if they match your desired characters or surpass a default power threshold
-* Keep track of pulled characters and automatically claim the best ones
+* Automatically roll and claim Mudae characters (waifus, husbandos) and kakera
+* Snipe cards from other users’ rolls if they match your desired characters/series or pass a power threshold
+* Keep a searchable history of everything it saw, tried to claim and married
 
-This bot still uses the Discord API to interact with Mudae and is intended to run 24/7.
+> [!CAUTION]
+> Self-bots break Discord's Terms of Service and can get your account banned. Use it on an account you're OK risking.
 
 ## Features
 
@@ -59,7 +60,7 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Open **http://127.0.0.1:8765** → **Configuración**, fill in your token, server ID and channel ID, save, and press **Iniciar**.
+Open **http://127.0.0.1:8765** (the panel is in Spanish) → **Configuración**, fill in your token, server ID and channel ID, save, and press **Iniciar**.
 Everything else (roll command, minute, desired characters/series, kakeras, power threshold, alerts) is set from the same page and applies live.
 
 ### Alerts
@@ -73,7 +74,7 @@ The panel only listens on `127.0.0.1` (your token is in it), so don't expose it 
 ### Possible Errors
 
 > [!WARNING]
-> Most issues come from **case sensitivity** or missing server settings. Double-check your configuration and Mudae toggles before troubleshooting further.
+> Most issues come from missing Mudae toggles or a wrong channel/server ID. Check the panel's log (right side of **En vivo**) first.
 
 * Mudae has no permission to read/write in the chosen channel
 * Discord token may have changed
