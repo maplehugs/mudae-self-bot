@@ -2,6 +2,7 @@
 import collections
 import datetime
 import json
+import random
 import re
 import sqlite3
 import threading
@@ -161,7 +162,7 @@ def handle(msg):
     reason = not card['owned'] and wanted(card)
     if reason:
         log(f"🎯 Snipeando {card['name']} ({reason})")
-        time.sleep(cfg['claimDelayMs'] / 1000)
+        time.sleep(cfg['claimDelayMs'] / 1000 * random.uniform(1, 2.5))  # never the exact same reaction time
         heart = next((b for b in buttons if not emoji(b).startswith('kakera')), None)
         if heart:
             click(msg, heart['custom_id'])
@@ -176,7 +177,7 @@ def handle(msg):
             q('UPDATE cards SET kakera=? WHERE id=?', emoji(b), row)
             log(f"💎 {emoji(b)} en {card['name']}")
             alert(f"💎 Reclamado {emoji(b)} en {card['name']}", card['image'])
-            time.sleep(0.5)
+            time.sleep(random.uniform(0.4, 1.2))
 
 
 def check_marriage(content):
@@ -294,17 +295,18 @@ def roll():
     cmds = SlashCommander(client.getSlashCommands(MUDAE_ID).json())
     if cfg['dailyKakera']:
         client.triggerSlashCommand(MUDAE_ID, ch, guild, data=cmds.get(['dk']))
-        time.sleep(2)
+        time.sleep(random.uniform(2, 4))
     log(f"🎲 Roleando /{cfg['rollCommand']}")
     cmd = cmds.get([cfg['rollCommand']])
     for _ in range(30):  # ponytail: hard cap in case "out of rolls" is never detected
         client.triggerSlashCommand(MUDAE_ID, ch, guild, data=cmd)
-        time.sleep(2)
+        time.sleep(random.uniform(2.5, 6))  # human-ish pace between rolls
         reply = last_reply()
         if reply and not reply.get('embeds'):  # text answer = no rolls left ("Wished by" cards still have embeds)
             log(f"🛑 {reply['content'][:100]}")
             break
     if cfg['pokeRoll']:
+        time.sleep(random.uniform(3, 10))
         client.sendMessage(ch, '$p')
 
 
@@ -317,22 +319,33 @@ def run_bg(fn):
     threading.Thread(target=safe, daemon=True).start()
 
 
+ROLL_JITTER_MIN = 12  # each hour's roll lands at a random time in [repeatMinute, repeatMinute + this)
+_next = None
+
+
+def plan_roll(after):
+    t = after.replace(minute=cfg['repeatMinute'] % 60, second=0, microsecond=0)
+    if t <= after - datetime.timedelta(minutes=ROLL_JITTER_MIN):
+        t += datetime.timedelta(hours=1)
+    jittered = t + datetime.timedelta(seconds=random.randrange(ROLL_JITTER_MIN * 60))
+    return jittered if jittered > after else jittered + datetime.timedelta(hours=1)
+
+
 def next_roll():
-    now = datetime.datetime.now().replace(second=0, microsecond=0)
-    t = now.replace(minute=cfg['repeatMinute'] % 60)
-    return t if t > now else t + datetime.timedelta(hours=1)
+    global _next
+    if _next is None or (_next.minute - cfg['repeatMinute']) % 60 >= ROLL_JITTER_MIN:
+        _next = plan_roll(datetime.datetime.now())  # first run, or repeatMinute changed in the panel
+    return _next
 
 
 def start_scheduler():
     def loop():
-        last = None
+        global _next
         while True:
-            now = datetime.datetime.now()
-            slot = now.strftime('%Y%m%d%H')
-            if cfg['autoRoll'] and client and now.minute == cfg['repeatMinute'] and last != slot:
-                last = slot
+            if cfg['autoRoll'] and client and datetime.datetime.now() >= next_roll():
+                _next = plan_roll(datetime.datetime.now() + datetime.timedelta(minutes=ROLL_JITTER_MIN))
                 run_bg(roll)
-            time.sleep(10)
+            time.sleep(random.uniform(5, 15))
     threading.Thread(target=loop, daemon=True).start()
 
 
