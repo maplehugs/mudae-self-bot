@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mudae Bot</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #171a21; --panel2: #1e222b; --line: #2a2f3a;
+    --text: #e6e8ee; --muted: #8b93a7; --accent: #ff6fa8; --ok: #3ddc97; --warn: #ffb547; --bad: #ff5d6c;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+           padding: 12px 20px; background: rgba(15,17,21,.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  h1 { font-size: 18px; margin: 0 8px 0 0; }
+  h1 span { color: var(--accent); }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 99px; background: var(--panel2); color: var(--muted); font-size: 13px; }
+  .pill::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .pill.on { color: var(--ok); } .pill.wait { color: var(--warn); } .pill.off { color: var(--bad); }
+  .spacer { flex: 1; }
+  button { font: inherit; cursor: pointer; border: 1px solid var(--line); background: var(--panel2); color: var(--text);
+           padding: 7px 14px; border-radius: 8px; }
+  button:hover { border-color: var(--muted); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #1a0010; font-weight: 600; }
+  button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  main { max-width: 1400px; margin: 0 auto; padding: 16px 20px 40px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
+  .stat b { display: block; font-size: 24px; font-variant-numeric: tabular-nums; }
+  .stat small { color: var(--muted); }
+  nav { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--line); }
+  nav button { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; color: var(--muted); padding: 10px 14px; }
+  nav button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); }
+  .live { display: grid; grid-template-columns: 1fr 360px; gap: 16px; }
+  @media (max-width: 900px) { .live { grid-template-columns: 1fr; } }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; align-content: start; }
+  .card { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; color: inherit; text-decoration: none; }
+  .card.claim { border-color: var(--warn); } .card.married { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .card img { display: block; width: 100%; aspect-ratio: 225/350; object-fit: cover; background: var(--panel2); }
+  .card .info { padding: 8px 10px; }
+  .card .name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card .series { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card .meta { display: flex; justify-content: space-between; margin-top: 4px; font-size: 12px; color: var(--muted); }
+  .card .power { color: #c9a7ff; font-weight: 600; }
+  .badges { position: absolute; top: 6px; left: 6px; right: 6px; display: flex; justify-content: space-between; gap: 4px; }
+  .badge { background: rgba(0,0,0,.72); padding: 2px 7px; border-radius: 99px; font-size: 12px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; }
+  .log { height: 70vh; overflow: auto; font: 12px/1.6 ui-monospace, monospace; white-space: pre-wrap; word-break: break-word; color: #c3c8d4; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+  .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #1a0010; }
+  input, select, textarea { font: inherit; color: var(--text); background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; width: 100%; }
+  textarea { min-height: 140px; resize: vertical; font-family: ui-monospace, monospace; font-size: 13px; }
+  .toolbar input { width: 240px; }
+  .cfg { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+  .cfg h2 { font-size: 15px; margin: 0 0 12px; }
+  .field { margin-bottom: 12px; }
+  .field > label, .field > span { display: block; margin-bottom: 4px; color: var(--muted); font-size: 13px; }
+  .check { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer; }
+  .check input { width: auto; accent-color: var(--accent); }
+  .kakeras { display: flex; flex-wrap: wrap; gap: 6px; }
+  .kakeras label { display: flex; gap: 6px; align-items: center; padding: 4px 10px; background: var(--panel2); border: 1px solid var(--line); border-radius: 99px; cursor: pointer; }
+  .kakeras input { width: auto; accent-color: var(--accent); }
+  .hint { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .hint a { color: var(--accent); }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .empty { color: var(--muted); padding: 30px; text-align: center; grid-column: 1 / -1; }
+  .savebar { position: sticky; bottom: 0; display: flex; gap: 10px; justify-content: flex-end; align-items: center; padding: 12px 0; background: var(--bg); }
+  #toast { color: var(--ok); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Mudae <span>Bot</span></h1>
+  <span id="status" class="pill off">Detenido</span>
+  <span id="next" class="pill" hidden></span>
+  <span class="spacer"></span>
+  <button id="start" class="primary" onclick="act('start')">▶ Iniciar</button>
+  <button id="stop" onclick="act('stop')" hidden>⏹ Detener</button>
+  <button onclick="act('roll')">🎲 Rolear ahora</button>
+</header>
+
+<main>
+  <section class="stats" aria-label="Últimas 24 horas">
+    <div class="stat"><b id="s-seen">0</b><small>Cartas vistas (24h)</small></div>
+    <div class="stat"><b id="s-claims">0</b><small>Intentos de claim</small></div>
+    <div class="stat"><b id="s-married">0</b><small>Casados 💍</small></div>
+    <div class="stat"><b id="s-kakera">0</b><small>Kakeras 💎</small></div>
+  </section>
+
+  <nav role="tablist">
+    <button role="tab" aria-selected="true" data-tab="live">En vivo</button>
+    <button role="tab" aria-selected="false" data-tab="history">Historial</button>
+    <button role="tab" aria-selected="false" data-tab="config">Configuración</button>
+  </nav>
+
+  <section id="tab-live" class="live">
+    <div id="feed" class="grid"></div>
+    <div class="panel"><div id="log" class="log" aria-live="polite"></div></div>
+  </section>
+
+  <section id="tab-history" hidden>
+    <div class="toolbar">
+      <button class="chip" aria-pressed="true" data-filter="all">Todo</button>
+      <button class="chip" aria-pressed="false" data-filter="married">💍 Casados</button>
+      <button class="chip" aria-pressed="false" data-filter="claim">🎯 Intentos</button>
+      <button class="chip" aria-pressed="false" data-filter="kakera">💎 Kakera</button>
+      <input id="search" type="search" placeholder="Buscar personaje o serie…" aria-label="Buscar">
+    </div>
+    <div id="history" class="grid"></div>
+  </section>
+
+  <section id="tab-config" hidden>
+    <form id="cfg" class="cfg" onsubmit="saveCfg(event)">
+      <div class="panel">
+        <h2>Cuenta</h2>
+        <div class="field"><label for="token">Token de Discord</label><input id="token" name="token" type="password" autocomplete="off"></div>
+        <div class="toolbar">
+          <button type="button" id="loadGuilds" onclick="loadGuilds(true)">🔄 Cargar mis servidores</button>
+          <label class="check" style="margin:0"><input type="checkbox" id="onlyMudae" checked onchange="fillGuilds()"> Solo con Mudae</label>
+        </div>
+        <div class="field" id="pickers" hidden>
+          <div class="row2">
+            <div><label for="guildPick">Servidor</label><select id="guildPick" onchange="pickGuild()"></select></div>
+            <div><label for="channelPick">Canal</label><select id="channelPick" onchange="$('channelId').value = this.value"></select></div>
+          </div>
+        </div>
+        <details>
+          <summary class="hint">IDs manuales</summary>
+          <div class="row2" style="margin-top:8px">
+            <div class="field"><label for="serverId">ID del servidor</label><input id="serverId" name="serverId" inputmode="numeric"></div>
+            <div class="field"><label for="channelId">ID del canal</label><input id="channelId" name="channelId" inputmode="numeric"></div>
+          </div>
+        </details>
+        <p class="hint">Cambiar token/canal requiere Detener → Iniciar.</p>
+      </div>
+
+      <div class="panel">
+        <h2>Rolls</h2>
+        <div class="row2">
+          <div class="field"><label for="rollCommand">Comando</label>
+            <select id="rollCommand" name="rollCommand">
+              <option>wx</option><option>wa</option><option>wg</option>
+              <option>hx</option><option>ha</option><option>hg</option>
+              <option>mx</option><option>ma</option><option>mg</option>
+            </select></div>
+          <div class="field"><label for="repeatMinute">Minuto de cada hora</label><input id="repeatMinute" name="repeatMinute" type="number" min="0" max="59"></div>
+        </div>
+        <label class="check"><input type="checkbox" name="autoRoll"> Rolear automáticamente cada hora</label>
+        <label class="check"><input type="checkbox" name="dailyKakera"> Lanzar /dk antes de rolear</label>
+        <label class="check"><input type="checkbox" name="pokeRoll"> Lanzar $p (Pokeslot)</label>
+      </div>
+
+      <div class="panel">
+        <h2>Sniper</h2>
+        <label class="check"><input type="checkbox" name="catchFromCharacters"> Por personaje deseado</label>
+        <label class="check"><input type="checkbox" name="catchFromSeries"> Por serie deseada</label>
+        <label class="check"><input type="checkbox" name="catchFromPower"> Por poder (kakera)</label>
+        <div class="row2">
+          <div class="field"><label for="minPower">Poder mínimo</label><input id="minPower" name="minPower" type="number" min="0"></div>
+          <div class="field"><label for="claimDelayMs">Retraso del claim (ms)</label><input id="claimDelayMs" name="claimDelayMs" type="number" min="0" max="5000"></div>
+        </div>
+        <div class="field"><span>Kakeras a reclamar</span><div class="kakeras" id="kakeras"></div></div>
+      </div>
+
+      <div class="panel">
+        <h2>Personajes deseados</h2>
+        <div class="field"><label for="desiredCharacters">Uno por línea (no distingue mayúsculas)</label>
+          <input list="dl-name" data-add="desiredCharacters" placeholder="Escribe para autocompletar y pulsa Enter…" aria-label="Agregar personaje" style="margin-bottom:6px">
+          <textarea id="desiredCharacters" name="desiredCharacters" data-list></textarea></div>
+        <div class="field"><label for="desiredSeries">Series deseadas, una por línea</label>
+          <input list="dl-series" data-add="desiredSeries" placeholder="Escribe para autocompletar y pulsa Enter…" aria-label="Agregar serie" style="margin-bottom:6px">
+          <textarea id="desiredSeries" name="desiredSeries" data-list></textarea></div>
+        <p class="hint">Sugerencias sacadas de las cartas que el bot ya vio.</p>
+        <datalist id="dl-name"></datalist><datalist id="dl-series"></datalist>
+      </div>
+
+      <div class="panel">
+        <h2>Alertas</h2>
+        <div class="field"><label for="discordWebhook">Webhook de Discord</label><input id="discordWebhook" name="discordWebhook" type="password" autocomplete="off" placeholder="https://discord.com/api/webhooks/…">
+          <p class="hint">Canal → Editar → Integraciones → Webhooks → Nuevo → Copiar URL.</p></div>
+        <div class="row2">
+          <div class="field"><label for="telegramToken">Token bot de Telegram</label><input id="telegramToken" name="telegramToken" type="password" autocomplete="off"></div>
+          <div class="field"><label for="telegramChatId">Chat ID</label><input id="telegramChatId" name="telegramChatId"></div>
+        </div>
+        <p class="hint">Crea el bot con <a href="https://t.me/BotFather" target="_blank" rel="noopener">@BotFather</a>, escríbele cualquier cosa y saca tu chat ID con <a href="https://t.me/userinfobot" target="_blank" rel="noopener">@userinfobot</a>.</p>
+        <p class="hint">Se avisa al intentar un claim, al casarte, al tomar kakera y si el bot se desconecta.</p>
+        <button type="button" onclick="testAlert()">🔔 Guardar y enviar prueba</button>
+      </div>
+
+      <div class="savebar" style="grid-column: 1 / -1"><span id="toast"></span><button class="primary" type="submit">Guardar</button></div>
+    </form>
+  </section>
+</main>
+
+<script>
+const KAKERAS = ['kakera', 'kakeraT', 'kakeraG', 'kakeraY', 'kakeraO', 'kakeraR', 'kakeraW', 'kakeraL', 'kakeraP', 'kakeraD', 'kakeraC'];
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+const api = (path, body) => fetch('/api/' + path, body === undefined ? {} :
+  {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)}).then(r => r.json());
+
+let state = null, filter = 'all';
+const rendered = {};
+
+function cardHTML(c, withDate) {
+  const img = /^https:\/\//.test(c.image) ? c.image : '';
+  const tag = c.action === 'married' ? '💍 Casado' : c.action === 'claim' ? '🎯 Intento' : '';
+  const when = new Date(c.ts * 1000);
+  const time = withDate ? when.toLocaleString([], {dateStyle: 'short', timeStyle: 'short'}) : when.toLocaleTimeString([], {timeStyle: 'short'});
+  return `<a class="card ${esc(c.action)}" href="${esc(img) || '#'}" target="_blank" rel="noopener noreferrer" title="${esc(c.name)} — ${esc(c.series)}">
+    <div class="badges"><span class="badge">${c.owned || c.action === 'married' ? '❤️' : '💔'}${tag ? ' ' + tag : ''}</span>${c.kakera ? `<span class="badge">💎 ${esc(c.kakera)}</span>` : ''}</div>
+    <img src="${esc(img)}" alt="${esc(c.name)}" loading="lazy" referrerpolicy="no-referrer">
+    <div class="info"><div class="name">${esc(c.name)}</div><div class="series">${esc(c.series)}</div>
+    <div class="meta"><span class="power">${c.power} 💎</span><span>${time}</span></div></div></a>`;
+}
+
+function put(id, html) {  // only touch the DOM when content changed, so images don't flicker
+  if (rendered[id] !== html) $(id).innerHTML = rendered[id] = html;
+}
+
+function render() {
+  const s = state;
+  const st = $('status');
+  st.className = 'pill ' + (s.connected ? 'on' : s.running ? 'wait' : 'off');
+  st.textContent = s.connected ? `Conectado · ${s.user}` : s.running ? 'Conectando…' : 'Detenido';
+  $('start').hidden = s.running; $('stop').hidden = !s.running;
+  $('next').hidden = !s.nextRoll; $('next').textContent = `Próximo roll ${s.nextRoll}`;
+  for (const k of ['seen', 'claims', 'married', 'kakera']) $('s-' + k).textContent = s.stats[k];
+
+  put('feed', s.feed.map(c => cardHTML(c)).join('') || '<p class="empty">Aún no hay cartas. Inicia el bot y espera un roll en el canal.</p>');
+  const atBottom = $('log').scrollHeight - $('log').scrollTop - $('log').clientHeight < 30;
+  put('log', esc(s.log.join('\n')));
+  if (atBottom) $('log').scrollTop = $('log').scrollHeight;
+
+  const term = $('search').value.trim().toLowerCase();
+  const hist = s.history.filter(c =>
+    (filter === 'all' || (filter === 'kakera' ? c.kakera : c.action === filter)) &&
+    (!term || (c.name + ' ' + c.series).toLowerCase().includes(term)));
+  put('history', hist.map(c => cardHTML(c, true)).join('') || '<p class="empty">Nada por aquí todavía.</p>');
+}
+
+async function poll() {
+  try { state = await api('state'); render(); } catch { $('status').className = 'pill off'; $('status').textContent = 'Panel sin conexión'; }
+  setTimeout(poll, 2500);
+}
+
+async function act(name) { await api(name, {}); setTimeout(async () => { state = await api('state'); render(); }, 600); }
+
+// ---- tabs & filters ----
+document.querySelectorAll('[role=tab]').forEach(b => b.onclick = () => {
+  document.querySelectorAll('[role=tab]').forEach(x => x.setAttribute('aria-selected', x === b));
+  for (const t of ['live', 'history', 'config']) $('tab-' + t).hidden = t !== b.dataset.tab;
+  if (b.dataset.tab === 'config') loadCfg();
+});
+document.querySelectorAll('[data-filter]').forEach(b => b.onclick = () => {
+  filter = b.dataset.filter;
+  document.querySelectorAll('[data-filter]').forEach(x => x.setAttribute('aria-pressed', x === b));
+  state && render();
+});
+$('search').oninput = () => state && render();
+
+// ---- config ----
+$('kakeras').innerHTML = KAKERAS.map(k => `<label><input type="checkbox" name="desiredKakeras" value="${k}"> ${k}</label>`).join('');
+
+async function loadCfg() {
+  const cfg = await api('config');
+  for (const el of $('cfg').elements) {
+    if (!el.name || !(el.name in cfg)) continue;
+    const v = cfg[el.name];
+    if (el.name === 'desiredKakeras') el.checked = v.includes(el.value);
+    else if (el.type === 'checkbox') el.checked = v;
+    else if (el.hasAttribute('data-list')) el.value = v.join('\n');
+    else el.value = v;
+  }
+  if (cfg.token && !guildList.length) loadGuilds(false);  // cached on the server after the first load
+  const names = await api('names');
+  for (const k of ['name', 'series']) $('dl-' + k).innerHTML = names[k].map(v => `<option value="${esc(v)}">`).join('');
+}
+
+// Enter in an autocomplete box appends the value to its list (no duplicates)
+document.querySelectorAll('[data-add]').forEach(inp => inp.onkeydown = e => {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  const v = inp.value.trim(), ta = $(inp.dataset.add);
+  const lines = ta.value.split('\n').map(x => x.trim()).filter(Boolean);
+  if (v && !lines.some(x => x.toLowerCase() === v.toLowerCase())) ta.value = [...lines, v].join('\n');
+  inp.value = '';
+});
+
+function readCfg() {
+  const out = {desiredKakeras: []};
+  for (const el of $('cfg').elements) {
+    if (!el.name) continue;
+    if (el.name === 'desiredKakeras') { if (el.checked) out.desiredKakeras.push(el.value); }
+    else if (el.type === 'checkbox') out[el.name] = el.checked;
+    else if (el.type === 'number') out[el.name] = parseInt(el.value || '0', 10);
+    else if (el.hasAttribute('data-list')) out[el.name] = el.value.split('\n').map(x => x.trim()).filter(Boolean);
+    else out[el.name] = el.value.trim();
+  }
+  return out;
+}
+
+async function saveCfg(e) {
+  e?.preventDefault();
+  if (!$('cfg').reportValidity()) return false;
+  await api('config', readCfg());
+  $('toast').textContent = '✓ Guardado';
+  setTimeout(() => $('toast').textContent = '', 2500);
+  return true;
+}
+
+// ---- server / channel pickers ----
+let guildList = [];
+const opt = (value, text, sel) => `<option value="${esc(value)}"${sel ? ' selected' : ''}>${esc(text)}</option>`;
+
+async function loadGuilds(refresh) {
+  const btn = $('loadGuilds');
+  if (refresh && !await saveCfg()) return;  // use the token currently in the form
+  btn.disabled = true; btn.textContent = '⏳ Buscando Mudae en tus servidores…';
+  try {
+    const r = await fetch('/api/guilds' + (refresh ? '?refresh' : ''));
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error);
+    guildList = data;
+    fillGuilds();
+  } catch (e) { $('toast').textContent = '⚠️ ' + e.message; }
+  btn.disabled = false; btn.textContent = '🔄 Cargar mis servidores';
+}
+
+function fillGuilds() {
+  if (!guildList.length) return;
+  const shown = guildList.filter(g => g.mudae || !$('onlyMudae').checked);
+  const cur = $('serverId').value;
+  $('guildPick').innerHTML = opt('', shown.length ? '— Elige servidor —' : 'Ningún servidor con Mudae') +
+    shown.map(g => opt(g.id, (g.mudae ? '🌸 ' : '') + g.name, g.id === cur)).join('');
+  $('pickers').hidden = false;
+  if (shown.some(g => g.id === cur)) loadChannels(cur);
+}
+
+function pickGuild() {
+  $('serverId').value = $('guildPick').value;
+  $('channelId').value = '';
+  loadChannels($('guildPick').value);
+}
+
+async function loadChannels(guild) {
+  $('channelPick').innerHTML = opt('', guild ? 'Cargando…' : '—');
+  if (!guild) return;
+  const r = await fetch('/api/channels?guild=' + encodeURIComponent(guild));
+  const chans = r.ok ? await r.json() : [];
+  const cur = $('channelId').value;
+  const groups = {};
+  for (const c of chans) (groups[c.category] ??= []).push(c);
+  $('channelPick').innerHTML = opt('', r.ok ? '— Elige canal —' : 'No pude leer los canales') +
+    Object.entries(groups).map(([cat, cs]) => {
+      const opts = cs.map(c => opt(c.id, '# ' + c.name, c.id === cur)).join('');
+      return cat ? `<optgroup label="${esc(cat)}">${opts}</optgroup>` : opts;
+    }).join('');
+}
+
+async function testAlert() { if (await saveCfg()) await api('test-alert', {}); }
+
+poll();
+</script>
+</body>
+</html>

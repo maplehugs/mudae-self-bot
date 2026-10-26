@@ -1,0 +1,5 @@
+config.json
+config.tmp
+mudae.db
+__pycache__/
+.idea/

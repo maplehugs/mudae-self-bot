@@ -18,122 +18,65 @@ This bot still uses the Discord API to interact with Mudae and is intended to ru
 
 ## Features
 
-* **Auto roll** every hour with your preferred command
-* **Auto claim** cards from your desired characters or series
-* **Auto react** to preferred kakera (fully handled by the sniper)
-* **Sniper** other users’ rolls:
+* **Web control panel** (`http://127.0.0.1:8765`): start/stop, roll now, live status and next roll time
+* **Live feed** of every card Mudae shows in your channel, **with the card image**, power and claimed status
+* **History** of claim attempts, marriages and kakera grabs (stored in `mudae.db`), searchable and filterable
+* **Alerts** via **Discord webhook** and/or **Telegram bot** (both free) on claim attempt, marriage, kakera and disconnect
+* **Auto roll** every hour at the minute you choose (+ `/dk` and `$p` optional)
+* **Sniper** for any roll in the channel: by desired character > series > power threshold (case-insensitive)
+* **Auto kakera** for the kakera types you pick
+* Uses slash commands for native boosts (10% extra Kakera)
 
-  * Claim cards from desired characters (`desiredCharacters`)
-  * Claim cards from desired series (`desiredSeries`)
-  * Claim cards that meet or exceed a power threshold (`minPower`)
-  * Fully configurable with booleans to toggle character/series/power sniping
-* **Pull list** to track and prioritize character pulls
-* **Repeat** all actions at the minute you prefer
-* **Daily Kakera** triggers `/dk` automatically during rolls
-* **BONUS** - Uses slash commands for native boosts (10% extra Kakera)
-* **Silent rolling** – rolling function no longer prints logs; all tracking is centralized in the sniper
+## Screenshots
+
+| Live feed | History | Config |
+| --- | --- | --- |
+| ![Live feed](screenshots/live.png) | ![History](screenshots/history.png) | ![Config](screenshots/config.png) |
 
 ## Files
 
-| File Name     | Purpose                            | Notes                                                                                                              |
-| ------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `Vars.py`     | Stores user-configurable variables | Edit this file to set your bot preferences                                                                         |
-| `Bot.py`      | Launches the bot                   | Execute this file to start the bot                                                                                 |
-| `Function.py` | Contains all bot logic             | Modified from the original to fix crashes and add sniper/pull list features                                        |
-| `Sniper.py`   | Snipes rolls from other users      | Reads all messages from Mudae (yours and others) and instantly claims desired characters or cards with 500+ Kakera |
+| File             | Purpose                                                       |
+| ---------------- | ------------------------------------------------------------- |
+| `app.py`         | Run this. Starts the bot and the web panel                    |
+| `mudae.py`       | Bot logic: sniper, roller, history, alerts                    |
+| `ui.html`        | The panel                                                     |
+| `config.json`    | Your settings (created/edited from the panel, git-ignored)    |
+| `test_mudae.py`  | Quick self-check: `python test_mudae.py`                      |
 
 ## Requirements
 
-* **Python 3.13.3**
-* **Discum** – For Discord message management ([GitHub](https://github.com/Merubokkusu/Discord-S.C.U.M)). Install the latest version directly from GitHub:
-
-```bash
-pip install discum
-```
-
-* **Schedule** – For precise timed execution:
-
-```bash
-pip install schedule
-```
+* **Python 3.13+**
+* `pip install -r requirements.txt` (Discum + Requests)
 
 > [!IMPORTANT]
 > Before using the bot, you must run the `$help` command in your server once.
-> This unlocks Mudae’s **slash commands**, which are required for the bot to function correctly.
+> This unlocks Mudae's **slash commands**, which are required for the bot to function correctly.
 
+## How to Use
 
-## How to Set Up / Use
-
-### Packages
-
-Make sure Python 3 is installed along with Discum and Schedule.
-
-### Variables (Vars.py)
-
-Set your bot preferences and account info:
-
-**Mandatory variables:**
-
-* `token` – Your Discord account token
-* `channelId` – The channel where the bot will roll
-* `serverId` – The server/guild ID
-
-**Optional variables:**
-
-* `rollCommand` – Command for rolling (mx, ma, mg, wx, wg, wa, hx, ha, hg)
-* `desiredKakeras` – Case-sensitive array of preferred kakera
-* `desiredSeries` – Case-sensitive array of preferred series
-* `desiredCharacters` – Array of characters to auto-claim with priority
-* `pokeRoll` – Enable Pokeslot rolling (True/False)
-* `repeatMinute` – Exact minute to perform rolls (00–59 eg. 11:30 → 12:30 → 1:30 → ...)
-* `minPower` – Minimum power for sniper pull (default 500)
-* `daily_kakera` - Toggle daily kakera command to be pulled every hour with simpleRoll()
-* `catch_from_characters` – Toggle claiming by desired characters (True/False)
-* `catch_from_series` – Toggle claiming by desired series (True/False)
-* `catch_from_power` – Toggle claiming by power threshold (True/False)
-
-**Example `Vars.py`:**
-
-```python
-token = 'YOUR_DISCORD_TOKEN'
-channelId = '123456789012345678'
-serverId = '987654321098765432'
-
-rollCommand = 'wx'
-desiredKakeras = ['kakeraP','kakeraY','kakeraO','kakeraR','kakeraW','kakeraL']
-desiredSeries = ['One Piece','Dragon Ball Z','Death Note']
-desiredCharacters = ['Luffy','Goku','Light Yagami']
-
-pokeRoll = True
-repeatMinute = '25'
-minPower = 500
-
-daily_kakera = True
-
-# Sniper options (1. Characters > 2. Series > 3. Power)
-catch_from_characters = True
-catch_from_series = True
-catch_from_power = True
+```bash
+pip install -r requirements.txt
+python app.py
 ```
 
-### Execution
+Open **http://127.0.0.1:8765** → **Configuración**, fill in your token, server ID and channel ID, save, and press **Iniciar**.
+Everything else (roll command, minute, desired characters/series, kakeras, power threshold, alerts) is set from the same page and applies live.
 
-Run `Bot.py` to start the bot. It will log all rolls, claims, and sniper actions.
+### Alerts
 
-* Red heart → already claimed cards
-* Broken heart → not claimed yet
+* **Discord:** channel → Edit → Integrations → Webhooks → New Webhook → copy URL → paste in the panel.
+* **Telegram:** create a bot with [@BotFather](https://t.me/BotFather), send it any message, get your chat ID from [@userinfobot](https://t.me/userinfobot), paste both in the panel.
+* Use **"Guardar y enviar prueba"** to check it works.
 
-![img.png](img.png)
-
+The panel only listens on `127.0.0.1` (your token is in it), so don't expose it to the internet.
 
 ### Possible Errors
 
 > [!WARNING]
-> Most issues come from **case sensitivity** or missing server settings. Double-check your `Vars.py` configuration and Mudae toggles before troubleshooting further.
+> Most issues come from **case sensitivity** or missing server settings. Double-check your configuration and Mudae toggles before troubleshooting further.
 
 * Mudae has no permission to read/write in the chosen channel
 * Discord token may have changed
-* Series/character names are case-sensitive
 * Your account must have DMs with Mudae enabled
 
 > [!IMPORTANT]
@@ -142,31 +85,3 @@ Run `Bot.py` to start the bot. It will log all rolls, claims, and sniper actions
 > * `$togglestatistics`
 > * `$togglekakstats`
 > * `$togglekakerarolls`
-
-## Advanced Features ("Fork" Update)
-
-* **Sniper System** – Automatically claims cards from other users’ rolls based on:
-
-  * Desired characters (`desiredCharacters`)
-  * Desired series (`desiredSeries`)
-  * Power threshold (`minPower`)
-  * Fully configurable with booleans: `catch_from_characters`, `catch_from_series`, `catch_from_power`
-
-* **Silent Roller** – Rolls cards and triggers daily Kakera without console output; all claiming and reactions handled by the sniper.
-
-* **Series & Character Cleaning** – Removes trailing emojis and extra spaces to ensure reliable matching with your desired lists.
-
-* **Pull List Management** – Tracks and prioritizes character pulls automatically.
-
-* **All original features** from GDiazFentanes’ bot are preserved:
-  
-  * Auto roll every hour
-  * Auto claim based on desired series
-  * Auto react to preferred Kakera
-  * Pokeslot rolling (`pokeRoll`)
-  * Repeat actions at a chosen minute
-  * Slash command support
-  
-* **Optional Multi-Bot Support:**
-
-  * You can run multiple accounts simultaneously to maximize auto-claims, sniper pulls, and Kakera collection.
